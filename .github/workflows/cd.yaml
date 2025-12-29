@@ -66,7 +66,7 @@ jobs:
       - name: Установка kubectl
         run: |
           # Получаем последнюю версию kubectl
-          KUBE_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+          KUBE_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
           curl -LO "https://dl.k8s.io/$KUBE_VERSION/bin/linux/amd64/kubectl"
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
