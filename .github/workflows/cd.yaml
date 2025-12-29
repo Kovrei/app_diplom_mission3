@@ -1,0 +1,103 @@
+name: Сборка и Развёртывание
+
+on:
+  push:
+    branches:
+      - '*'
+  create:
+    tags:
+      - '*'
+
+env:
+  IMAGE_TAG: rei169kov/nginx
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
+
+      - name: Установка Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Вход на Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.USER_DOCKER_HUB }}
+          password: ${{ secrets.MY_TOKEN_DOCKER_HUB }}
+
+      - name: Определение версии
+        run: |
+          echo "GITHUB_REF: ${GITHUB_REF}"
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            # Ищем версию в сообщении коммита (формат X.Y.Z)
+            VERSION=$(git log -1 --pretty=format:%B | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          fi
+          # Если версия не найдена — используем sha коммита как fallback
+          if [[ -z "$VERSION" ]]; then
+            echo "No version found. Using commit SHA as fallback."
+            VERSION=$(echo ${GITHUB_SHA} | cut -c1-8)
+          fi
+          VERSION=${VERSION//[[:space:]]/}  # Удаляем пробелы
+          echo "Using version: $VERSION"
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Сборка и push Docker-образа
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_TAG }}:${{ env.VERSION }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
+
+      - name: Установка kubectl
+        run: |
+          # Получаем последнюю версию kubectl
+          KUBE_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+          curl -LO "https://dl.k8s.io/$KUBE_VERSION/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Конфигурация kubectl и проверка кластера
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          echo "$KUBECONFIG" > config.yml
+          export KUBECONFIG=config.yml
+
+          # Проверка доступа к кластеру
+          kubectl config view
+          kubectl get nodes -o wide
+          kubectl get pods --all-namespaces
+
+      - name: Развёртывание приложения
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          VERSION: ${{ env.VERSION }}
+        run: |
+          export KUBECONFIG=config.yml
+
+          # Пример деплоя через манифест (рекомендуется)
+          # kubectl apply -f k8s/deployment.yaml
+
+          # Временное решение: создание deployment напрямую
+          kubectl create deployment nginx \
+            --image=${{ env.IMAGE_TAG }}:${{ env.VERSION }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl rollout status deployment.v1.apps/nginx --timeout=60s

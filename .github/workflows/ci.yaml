@@ -1,0 +1,50 @@
+name: Сборка и публикация Docker-образа
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
+
+      - name: Настройка Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Вход на Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.USER_DOCKER_HUB }}
+          password: ${{ secrets.MY_TOKEN_DOCKER_HUB }}
+
+      - name: Кэширование слоев Docker
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Сборка и push Docker-образа с кэшированием
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: ${{ secrets.USER_DOCKER_HUB }}/nginx:latest
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+      - name: Запуск контейнера для тестирования
+        run: |
+          docker run -d --name test-nginx \
+            -p 8080:80 \
+            ${{ secrets.USER_DOCKER_HUB }}/nginx:latest
+          sleep 5
+          curl --retry 5 --retry-delay 2 -f http://localhost:8080
+          docker stop test-nginx
+          docker rm test-nginx
