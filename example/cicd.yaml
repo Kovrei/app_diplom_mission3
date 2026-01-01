@@ -9,7 +9,7 @@ on:
 
 env:
   IMAGE_TAG: rei169kov
-  RELEASE_NAME: my_app_for_diplom
+  RELEASE_NAME: myapp
   NAMESPACE: monitoring
 
 jobs:
