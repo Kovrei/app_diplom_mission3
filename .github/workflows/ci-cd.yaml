@@ -27,7 +27,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: sergey282/test_web_application
+          images: kov169rei/nginx
           tags: |
             type=ref,event=branch
             type=ref,event=pr
