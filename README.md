@@ -1,3 +1,3 @@
 # app_diplom_mission3
-![GitHub Actions Status](https://github.com/kovrei/My-GitHubActions-Basics/workflows/Build/badge.svg)
+[![Сборка Docker-образа](https://github.com/Kovrei/app_diplom_mission3/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kovrei/app_diplom_mission3/actions/workflows/deploy.yml)
 1.0.1
