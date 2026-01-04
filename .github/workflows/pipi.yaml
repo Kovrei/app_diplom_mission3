@@ -2,10 +2,11 @@ name: Pipeline
 
 on:
   push:
-    branches: [ main ]
-    tags: [ '*.*.*' ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - '*'
+  create:
+    tags:
+      - '*'
 
 jobs:
   build-and-push:
