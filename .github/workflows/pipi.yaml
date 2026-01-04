@@ -21,7 +21,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: your-docker-hub/nginx-app
+        images: rei169kov/nginx
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
@@ -47,7 +47,7 @@ jobs:
         IMAGE_TAG: ${{ steps.meta.outputs.tags[0] }}
       run: |
         # Обновляем тег образа в манифесте
-        sed -i "s|your-docker-hub/nginx-app:.*|$IMAGE_TAG|g" kubernetes/deployment.yaml
+        sed -i "s|rei169kov/nginx:.*|$IMAGE_TAG|g" kubernetes/deployment.yaml
         kubectl apply -f kubernetes/deployment.yaml
         # Ждём готовности подов
         kubectl rollout status deployment/nginx-app
