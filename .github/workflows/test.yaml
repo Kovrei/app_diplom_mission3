@@ -68,7 +68,7 @@ jobs:
       - name: Конфигурирование kubectl, развертыввание и деплой
         run: |       
           echo "Deploying version: $VERSION"
-          echo "${{ secrets.KUBECONFIG }}"| base64 -d  > config.yml
+          echo "${{ secrets.KUBECONFIG }}" > config.yml
           export KUBECONFIG=config.yml
           kubectl config view
           kubectl get nodes
