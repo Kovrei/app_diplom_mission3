@@ -67,12 +67,13 @@ jobs:
 
       - name: Конфигурирование kubectl, развертыввание и деплой
         run: |       
+          echo "Deploying version: $VERSION"
           echo "${{ secrets.KUBECONFIG }}"| base64 -d  > config.yml
           export KUBECONFIG=config.yml
           kubectl config view
           kubectl get nodes
           kubectl get pods --all-namespaces
-          kubectl create deployment nginx --image=rei169kov/nginx:1.0
+          kubectl create deployment nginx --image=rei169kov/nginx:${{ env.VERSION }}
           kubectl rollout status deployment.v1.apps/nginx
     env:
       KUBECONFIG: ${{ secrets.KUBECONFIG }}
