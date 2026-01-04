@@ -40,13 +40,13 @@ jobs:
           echo "Using version: $VERSION"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-      - name: Build and push Docker image
+      - name: Сборка и push
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.IMAGE_TAG }}:${{ env.VERSION }}
 
   deploy:
     needs: build-and-push
