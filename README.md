@@ -2,6 +2,8 @@
 
 1.0.3  
 
+
+
 [![Pipeline](https://github.com/Kovrei/app_diplom_mission3/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/Kovrei/app_diplom_mission3/actions/workflows/ci-cd.yaml)
 
  
