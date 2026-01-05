@@ -82,7 +82,7 @@ jobs:
 
       - name: Конфигурирование kubectl, развертыввание и деплой
         run: |       
-          echo "${{ secrets.KUBECONFIG }}" > config.yml
+          echo "${{ secrets.KUBECONFIG }}"| base64 -d  > config.yml
           export KUBECONFIG=config.yml
           kubectl config view
           kubectl get nodes
